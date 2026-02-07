@@ -125,7 +125,7 @@ func decodeIdCardSignals(signals []string) map[string]string {
 func main() {
 	proofPath := flag.String("proof", "", "Path to captured proof JSON file")
 	vkPath := flag.String("vk", "", "Path to verification key JSON file (overrides auto-detection)")
-	vkDir := flag.String("vk-dir", "", "Directory containing vkey files (default: ../vkeys/)")
+	vkDir := flag.String("vk-dir", "", "Directory containing vkey files (default: ../self-vkeys/)")
 	proofOnly := flag.String("proof-only", "", "Path to standalone proof JSON file (snarkjs format)")
 	pubSignalsPath := flag.String("public-signals", "", "Path to standalone public signals JSON file")
 	exportGnark := flag.String("export-gnark", "", "Directory to export gnark binary files (proof.bin, vk.bin, public_inputs.bin)")
@@ -138,7 +138,7 @@ func main() {
 		fmt.Println("  go run main.go --proof ../proofs/<id>.json")
 		fmt.Println()
 		fmt.Println("  # From captured proof with explicit vkey:")
-		fmt.Println("  go run main.go --proof ../proofs/<id>.json --vk ../vkeys/vc_and_disclose.json")
+		fmt.Println("  go run main.go --proof ../proofs/<id>.json --vk ../self-vkeys/vc_and_disclose.json")
 		fmt.Println()
 		fmt.Println("  # From standalone snarkjs files:")
 		fmt.Println("  go run main.go --proof-only proof.json --vk vkey.json --public-signals public_signals.json")
@@ -180,7 +180,7 @@ func main() {
 			}
 			dir := *vkDir
 			if dir == "" {
-				dir = filepath.Join(filepath.Dir(*proofPath), "..", "vkeys")
+				dir = filepath.Join(filepath.Dir(*proofPath), "..", "self-vkeys")
 			}
 			autoVkPath := filepath.Join(dir, vkFile)
 			fmt.Printf("Auto-selected vkey: %s\n", autoVkPath)
