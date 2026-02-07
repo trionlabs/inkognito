@@ -1,22 +1,14 @@
 # SP1 zkPDF + Self ID
 
-Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM. Verifies a Groth16 identity proof, a PDF digital signature, and cross-checks the surname between the two — all in a single zero-knowledge proof.
+Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM. Verifies a Groth16 identity proof, a PDF digital signature, and cross-checks the personal information, details between the two, all in a single zero-knowledge proof.
 
-```
-                    ┌─────────────┐
-                    │  Self App   │
-                    │  (scan ID)  │
-                    └──────┬──────┘
-                           │ Groth16 proof
-                           ▼
-┌──────────┐       ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-│ Frontend │──────▶│  self2gnark  │──────▶│   SP1 zkVM   │──────▶│  Composed    │
-│ (Next.js)│ POST  │  (Go CLI)    │ bin   │  (Rust guest)│       │  ZK Proof    │
-└──────────┘       └──────────────┘       └──────┬───────┘       └──────────────┘
-                                                 │
-                                           ┌─────┴─────┐
-                                           │ Signed PDF │
-                                           └───────────┘
+```mermaid
+graph LR
+    A["Self App<br/>(scan ID)"] -->|Groth16 proof| B["Frontend<br/>(Next.js)"]
+    B -->|POST| C["self2gnark<br/>(Go CLI)"]
+    C -->|bin| D["SP1 zkVM<br/>(Rust guest)"]
+    E["Signed PDF"] --> D
+    D --> F["Composed<br/>ZK Proof"]
 ```
 
 **What SP1 verifies:**
