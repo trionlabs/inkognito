@@ -1,0 +1,9 @@
+[package]
+name = "zkid-program"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sp1-zkvm = "5.2.4"
+sp1-verifier = { version = "5.2.4", default-features = false }
+serde = { version = "1", features = ["derive"] }
