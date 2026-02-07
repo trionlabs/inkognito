@@ -6,4 +6,6 @@ edition = "2021"
 [dependencies]
 sp1-zkvm = "5.2.4"
 sp1-verifier = { version = "5.2.4", default-features = false }
+signature-validator = { git = "https://github.com/privacy-ethereum/zkpdf", subdirectory = "pdf-utils/signature-validator" }
+extractor = { git = "https://github.com/privacy-ethereum/zkpdf", subdirectory = "pdf-utils/extractor" }
 serde = { version = "1", features = ["derive"] }

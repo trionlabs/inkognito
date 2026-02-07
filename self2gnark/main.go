@@ -147,6 +147,7 @@ func main() {
 
 	var proofJSON, pubSignalsJSON, vkJSON []byte
 	var err error
+	attID := 0
 
 	if *proofPath != "" {
 		// Parse captured proof
@@ -162,7 +163,7 @@ func main() {
 
 		// Parse attestation ID (can be int or string)
 		attIDStr := strings.Trim(string(captured.AttestationID), "\"")
-		attID, _ := strconv.Atoi(attIDStr)
+		attID, _ = strconv.Atoi(attIDStr)
 
 		fmt.Printf("Proof ID: %s\n", captured.ProofID)
 		fmt.Printf("Captured at: %s\n", captured.CapturedAt)
@@ -291,19 +292,6 @@ func main() {
 		for k, v := range identity {
 			fmt.Printf("  %s: %s\n", k, v)
 		}
-
-		// Export identity.json if export dir is specified
-		if *exportGnark != "" {
-			if err := os.MkdirAll(*exportGnark, 0755); err != nil {
-				log.Fatalf("Failed to create export dir: %v", err)
-			}
-			idJSON, _ := json.MarshalIndent(identity, "", "  ")
-			idPath := filepath.Join(*exportGnark, "identity.json")
-			if err := os.WriteFile(idPath, idJSON, 0644); err != nil {
-				log.Fatalf("Failed to write identity.json: %v", err)
-			}
-			fmt.Printf("Exported identity.json to %s\n", idPath)
-		}
 	}
 
 	// Export gnark binary files if requested
@@ -351,6 +339,26 @@ func main() {
 		}
 		fmt.Printf("Exported public_inputs.bin: %d bytes (%d signals x 32B)\n",
 			len(piBytes), len(gnarkProof.PublicInputs))
+
+		// Export identity.json with attestation_id + decoded fields (if available)
+		identity := map[string]interface{}{
+			"attestation_id": attID,
+		}
+		if *decode {
+			var signals []string
+			if err := json.Unmarshal(pubSignalsJSON, &signals); err == nil {
+				decoded := decodeIdCardSignals(signals)
+				for k, v := range decoded {
+					identity[k] = v
+				}
+			}
+		}
+		idJSON, _ := json.MarshalIndent(identity, "", "  ")
+		idPath := filepath.Join(*exportGnark, "identity.json")
+		if err := os.WriteFile(idPath, idJSON, 0644); err != nil {
+			log.Fatalf("Failed to write identity.json: %v", err)
+		}
+		fmt.Printf("Exported identity.json to %s\n", idPath)
 	}
 
 	fmt.Println("\nDone.")
