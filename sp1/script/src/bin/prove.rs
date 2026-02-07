@@ -1,5 +1,5 @@
 use clap::Parser;
-use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
+use sp1_sdk::{include_elf, network::FulfillmentStrategy, Prover, ProverClient, SP1Stdin};
 use std::fs;
 
 const ELF: &[u8] = include_elf!("zkid-program");
@@ -22,6 +22,14 @@ struct Args {
     /// Generate an SP1 proof
     #[arg(long)]
     prove: bool,
+
+    /// Use Succinct prover network instead of local CPU
+    #[arg(long)]
+    network: bool,
+
+    /// Enable TEE private proving (routes to tee.sp1-lumiere.xyz)
+    #[arg(long)]
+    private: bool,
 }
 
 #[derive(serde::Deserialize)]
@@ -29,12 +37,7 @@ struct Identity {
     attestation_id: u8,
 }
 
-fn main() {
-    sp1_sdk::utils::setup_logger();
-    dotenv::dotenv().ok();
-
-    let args = Args::parse();
-
+fn load_stdin(args: &Args) -> (SP1Stdin, bool) {
     // Read all inputs from gnark-dir
     let proof_bin = fs::read(format!("{}/proof.bin", args.gnark_dir))
         .expect("Failed to read proof.bin");
@@ -87,9 +90,18 @@ fn main() {
         stdin.write(&identity.attestation_id);
     }
 
-    let client = ProverClient::from_env();
+    (stdin, has_pdf)
+}
+
+fn main() {
+    sp1_sdk::utils::setup_logger();
+    dotenv::dotenv().ok();
+
+    let args = Args::parse();
+    let (stdin, has_pdf) = load_stdin(&args);
 
     if args.execute {
+        let client = ProverClient::from_env();
         println!("\nExecuting SP1 program...");
         let (mut output, report) = client.execute(ELF, &stdin).run().unwrap();
         println!("Execution complete: {} cycles", report.total_instruction_count());
@@ -126,7 +138,47 @@ fn main() {
             }
             std::process::exit(1);
         }
+    } else if args.prove && args.network {
+        // Network proving: submit to Succinct prover network, return request ID immediately
+        let mut builder = ProverClient::builder().network();
+        if args.private {
+            builder = builder.private();
+        }
+        let client = builder.build();
+
+        println!("\nSetting up SP1 proving key...");
+        let (pk, _vk) = client.setup(ELF);
+
+        println!("Submitting to Succinct prover network{}...",
+            if args.private { " (TEE private)" } else { "" });
+
+        let mut prove_builder = client.prove(&pk, &stdin)
+            .compressed()
+            .skip_simulation(true);
+        if args.private {
+            prove_builder = prove_builder.strategy(FulfillmentStrategy::Reserved);
+        }
+        let request_id = prove_builder
+            .request()
+            .expect("failed to submit proof request");
+
+        let request_id_hex = format!("0x{}", hex::encode(request_id.as_slice()));
+        let explorer_url = format!("https://explorer.succinct.xyz/request/{}", request_id_hex);
+
+        // Print JSON to stdout for machine parsing
+        println!("---JSON_OUTPUT_START---");
+        println!("{}", serde_json::json!({
+            "request_id": request_id_hex,
+            "explorer_url": explorer_url,
+        }));
+        println!("---JSON_OUTPUT_END---");
+
+        eprintln!("\nProof request submitted!");
+        eprintln!("Request ID: {}", request_id_hex);
+        eprintln!("Explorer:   {}", explorer_url);
     } else if args.prove {
+        // Local proving
+        let client = ProverClient::from_env();
         println!("\nSetting up SP1 proving key...");
         let (pk, vk) = client.setup(ELF);
 

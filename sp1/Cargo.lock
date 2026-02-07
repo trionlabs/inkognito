@@ -7375,6 +7375,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "dotenv",
+ "hex",
  "serde",
  "serde_json",
  "sp1-build",
