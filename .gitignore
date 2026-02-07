@@ -1,0 +1,22 @@
+# Rust
+**/target/
+
+# Go
+converter/converter
+
+# Node.js
+node_modules/
+.next/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Data artifacts
+proofs/*.json
+!proofs/.gitkeep
+gnark-out/
+uploads/
