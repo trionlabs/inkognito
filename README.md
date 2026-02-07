@@ -1,12 +1,39 @@
 # SP1 zkPDF + Self ID
 
-Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM.
+Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM. Verifies a Groth16 identity proof, a PDF digital signature, and cross-checks the surname between the two — all in a single zero-knowledge proof.
 
-## App (Next.js Frontend)
+```
+                    ┌─────────────┐
+                    │  Self App   │
+                    │  (scan ID)  │
+                    └──────┬──────┘
+                           │ Groth16 proof
+                           ▼
+┌──────────┐       ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│ Frontend │──────▶│  self2gnark  │──────▶│   SP1 zkVM   │──────▶│  Composed    │
+│ (Next.js)│ POST  │  (Go CLI)    │ bin   │  (Rust guest)│       │  ZK Proof    │
+└──────────┘       └──────────────┘       └──────┬───────┘       └──────────────┘
+                                                 │
+                                           ┌─────┴─────┐
+                                           │ Signed PDF │
+                                           └───────────┘
+```
 
-Captures Self Protocol Groth16 identity proofs via QR code scan.
+**What SP1 verifies:**
+1. Groth16 BN254 proof from Self Protocol (identity)
+2. PDF digital signature (document authenticity)
+3. Name, surname, ID number etc. cross-check between identity proof and PDF signer
 
-### Setup
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 18+ and pnpm
+- [Go](https://go.dev/) 1.21+
+- [SP1](https://docs.succinct.xyz/) v5.2.4: `sp1up --version v5.2.4`
+- [ngrok](https://ngrok.com/) (Self Protocol requires a public endpoint)
+- [Self Protocol](https://self.xyz/) app on your phone
+
+## Step 1: Capture Identity Proof (Frontend)
 
 ```bash
 cd app
@@ -15,47 +42,66 @@ pnpm install
 # Start ngrok tunnel (separate terminal)
 ngrok http 3000
 
-# Copy the https URL and set it in .env
+# Set your ngrok URL in .env
 cp .env.example .env
 
 pnpm dev
 ```
 
-### How it works
+1. Open `http://localhost:3000`
+2. Scan the QR code with the Self Protocol app
+3. Proof is saved to `proofs/` as JSON
 
-1. Open `http://localhost:3000` in your browser
-2. Scan the QR code with the [Self Protocol](https://self.xyz/) app
-3. The app captures the Groth16 proof and saves it to `proofs/`
-
-## Self-to-gnark Converter (Go)
-
-Converts Self Protocol proofs from circom/snarkjs format to gnark format, verifies them, and decodes identity fields.
-
-### Setup
+## Step 2: Convert Proof (Go CLI)
 
 ```bash
 cd self2gnark
-go build -o self2gnark .
-```
 
-### Usage
-
-```bash
-# Convert + verify + decode identity
-go run main.go --proof ../proofs/<proof_id>.json --decode
-
-# Export gnark binary files for SP1
-go run main.go --proof ../proofs/<proof_id>.json --export-gnark ../gnark-out/
-
-# Both
+# Convert + verify + decode identity + export gnark binaries
 go run main.go --proof ../proofs/<proof_id>.json --export-gnark ../gnark-out/ --decode
 ```
 
-### What it does
+This:
+1. Converts Self Protocol format (`a/b/c`) to snarkjs (`pi_a/pi_b/pi_c`)
+2. Auto-selects verification key by attestation type
+3. Converts snarkjs to gnark via `circom2gnark` and verifies
+4. Decodes MRZ identity fields (surname, given name, DOB, nationality)
+5. Exports to `gnark-out/`: `proof.bin`, `vk.bin`, `public_inputs.bin`, `identity.json`
 
-1. Converts Self Protocol proof format (`a/b/c`) to snarkjs (`pi_a/pi_b/pi_c`) with projective Z coordinates
-2. Auto-selects verification key based on attestation type (Passport, EU ID, Aadhaar)
-3. Converts snarkjs → gnark format via `circom2gnark`
-4. Verifies the proof using gnark BN254 pairing
-5. `--decode`: unpacks MRZ identity fields (surname, given name, DOB, nationality, older_than)
-6. `--export-gnark`: exports `proof.bin`, `vk.bin`, `public_inputs.bin` for SP1 consumption
+## Step 3: Verify in SP1
+
+```bash
+cd sp1
+
+# Self Groth16 verification only
+cargo run --release --bin prove -- --execute --gnark-dir ../gnark-out
+
+# Groth16 + PDF signature + name, surname and ID number cross-check
+cargo run --release --bin prove -- --execute --gnark-dir ../gnark-out --pdf <path-to-signed.pdf>
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--gnark-dir` | Directory with gnark exports (proof.bin, vk.bin, public_inputs.bin, identity.json) |
+| `--pdf` | Optional signed PDF for signature verification + surname cross-check |
+| `--execute` | Run in SP1 executor (fast, no proof generated) |
+| `--prove` | Generate a full SP1 proof (slow on CPU) |
+
+## Attestation Types
+
+| ID | Type | Verification Key |
+|----|------|-----------------|
+| 1 | E-PASSPORT | `self-vkeys/vc_and_disclose.json` |
+| 2 | EU_ID_CARD | `self-vkeys/vc_and_disclose_id.json` |
+| 3 | AADHAAR | `self-vkeys/vc_and_disclose_aadhaar.json` |
+
+## SP1 Verifier Patch
+
+SP1 v5.2.4's `sp1-verifier` panics on zero-valued public inputs (`AffineG1 * Fr(0)` calls `unwrap()` on `None`). Our proof has zeros at indices 3-7, 13, 15. The patch applies a one-line fix:
+
+```rust
+// sp1-verifier-patch/src/groth16/verify.rs:45
+if *i != Fr::zero() { acc + (*b * *i) } else { acc }
+```
