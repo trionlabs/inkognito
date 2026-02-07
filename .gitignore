@@ -2,7 +2,7 @@
 **/target/
 
 # Go
-converter/converter
+self2gnark/self2gnark
 
 # Node.js
 node_modules/

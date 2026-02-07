@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const timestamp = Date.now();
     const proofId = `${attestationId || "unknown"}_${timestamp}`;
 
-    const proofsDir = join(process.cwd(), "proofs");
+    const proofsDir = join(process.cwd(), "..", "proofs");
     await mkdir(proofsDir, { recursive: true });
 
     const proofPath = join(proofsDir, `${proofId}.json`);
