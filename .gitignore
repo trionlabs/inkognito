@@ -20,3 +20,6 @@ proofs/*.json
 !proofs/.gitkeep
 gnark-out/
 uploads/
+
+# Proofs
+proofs/
