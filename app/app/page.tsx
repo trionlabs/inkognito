@@ -220,7 +220,7 @@ export default function Home() {
               ];
               const currentIdx = flowSteps.indexOf(nav.step);
               return (
-                <nav className="font-mono text-[14px] uppercase tracking-wide mb-8 animate-fadeInUp">
+                <nav className="font-mono text-[15px] uppercase tracking-wide mb-8 animate-fadeInUp">
                   <span className="text-ink-muted">{nav.useCase.label}</span>
                   <span className="text-ink-muted mx-2">/</span>
                   {flowSteps.map((s, i) => {

@@ -79,16 +79,16 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
           <div className="px-4 py-3 border-b border-ink-border">
             <div className="flex items-center gap-2 mb-1">
               <ShieldIcon className="w-3 h-3 text-ink-muted" />
-              <span className="font-mono text-[11px] text-ink-muted uppercase tracking-[0.12em]">
+              <span className="font-mono text-xs text-ink-muted uppercase tracking-[0.12em]">
                 Proof Blueprint
               </span>
             </div>
             {displayUseCase ? (
-              <p className={`font-mono text-[15px] text-ink-bright transition-all duration-200 ${contentOpacity}`}>
+              <p className={`font-mono text-base text-ink-bright transition-all duration-200 ${contentOpacity}`}>
                 {displayUseCase.label}
               </p>
             ) : (
-              <p className="font-mono text-[15px] text-ink-muted blueprint-idle-text">
+              <p className="font-mono text-base text-ink-muted blueprint-idle-text">
                 Select a use case
               </p>
             )}
@@ -99,12 +99,12 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
             className={`px-4 py-3 border-b border-ink-border ${sectionBg} transition-all duration-200 ease-out`}
             style={{ transitionDelay: "0ms" }}
           >
-            <span className="font-mono text-[11px] text-ink-muted uppercase tracking-[0.12em]">
+            <span className="font-mono text-xs text-ink-muted uppercase tracking-[0.12em]">
               SEC.01 &mdash; inputs
             </span>
             <div className={`mt-2 transition-all duration-200 ease-out`} style={{ transitionDelay: "0ms" }}>
               {mode === "idle" ? (
-                <p className="font-mono text-[13px] text-ink-muted italic blueprint-idle-text">
+                <p className="font-mono text-sm text-ink-muted italic blueprint-idle-text">
                   Awaiting selection...
                 </p>
               ) : hasSources ? (
@@ -113,7 +113,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <PassportIcon className="w-3 h-3 text-ink-muted" />
-                        <span className="font-mono text-[13px] text-ink-subtle">Passport</span>
+                        <span className="font-mono text-sm text-ink-subtle">Passport</span>
                       </div>
                       {mode === "active" ? (
                         passportScanned ? (
@@ -130,7 +130,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <PdfIcon className="w-3 h-3 text-ink-muted" />
-                        <span className="font-mono text-[13px] text-ink-subtle">PDF Document</span>
+                        <span className="font-mono text-sm text-ink-subtle">PDF Document</span>
                       </div>
                       {mode === "active" ? (
                         pdfUploaded ? (
@@ -145,7 +145,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                   )}
                 </div>
               ) : (
-                <p className={`font-mono text-[13px] text-ink-muted italic ${contentOpacity} transition-opacity duration-200`}>
+                <p className={`font-mono text-sm text-ink-muted italic ${contentOpacity} transition-opacity duration-200`}>
                   Configured at next step
                 </p>
               )}
@@ -157,12 +157,12 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
             className={`px-4 py-3 border-b border-ink-border ${sectionBg} transition-all duration-200 ease-out`}
             style={{ transitionDelay: "40ms" }}
           >
-            <span className="font-mono text-[11px] text-ink-muted uppercase tracking-[0.12em]">
+            <span className="font-mono text-xs text-ink-muted uppercase tracking-[0.12em]">
               SEC.02 &mdash; checks
             </span>
             <div className="mt-2 transition-all duration-200 ease-out" style={{ transitionDelay: "40ms" }}>
               {mode === "idle" ? (
-                <p className="font-mono text-[13px] text-ink-muted italic blueprint-idle-text">
+                <p className="font-mono text-sm text-ink-muted italic blueprint-idle-text">
                   Verification steps will appear here
                 </p>
               ) : hasChecks ? (
@@ -170,7 +170,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                   {displayUseCase!.checks.map((check, i) => (
                     <span
                       key={i}
-                      className={`font-mono text-[12px] text-ink-muted px-2 py-0.5 rounded-sm transition-all duration-200 ${
+                      className={`font-mono text-[13px] text-ink-muted px-2 py-0.5 rounded-sm transition-all duration-200 ${
                         mode === "active"
                           ? "bg-ink-bg border border-solid border-ink-border"
                           : "bg-ink-bg/50 border border-solid border-ink-border"
@@ -181,7 +181,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                   ))}
                 </div>
               ) : (
-                <p className={`font-mono text-[13px] text-ink-muted italic ${contentOpacity} transition-opacity duration-200`}>
+                <p className={`font-mono text-sm text-ink-muted italic ${contentOpacity} transition-opacity duration-200`}>
                   Configured at next step
                 </p>
               )}
@@ -193,16 +193,16 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
             className={`px-4 py-3 border-b border-ink-border ${sectionBg} transition-all duration-200 ease-out`}
             style={{ transitionDelay: "80ms" }}
           >
-            <span className="font-mono text-[11px] text-ink-muted uppercase tracking-[0.12em]">
+            <span className="font-mono text-xs text-ink-muted uppercase tracking-[0.12em]">
               SEC.03 &mdash; output
             </span>
             <div className="mt-1 transition-all duration-200 ease-out" style={{ transitionDelay: "80ms" }}>
               {mode === "idle" ? (
-                <p className="font-mono text-[13px] text-ink-muted italic blueprint-idle-text">
+                <p className="font-mono text-sm text-ink-muted italic blueprint-idle-text">
                   Proof output specification
                 </p>
               ) : (
-                <p className={`font-mono text-[13px] text-ink-subtle ${contentOpacity} transition-opacity duration-200`}>
+                <p className={`font-mono text-sm text-ink-subtle ${contentOpacity} transition-opacity duration-200`}>
                   {displayUseCase!.outputDescription}
                 </p>
               )}
@@ -214,21 +214,21 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
             className={`px-4 py-3 ${sectionBg} transition-all duration-200 ease-out`}
             style={{ transitionDelay: "120ms" }}
           >
-            <span className="font-mono text-[11px] text-ink-muted uppercase tracking-[0.12em]">
+            <span className="font-mono text-xs text-ink-muted uppercase tracking-[0.12em]">
               SEC.04 &mdash; status
             </span>
             <div className="mt-1.5 transition-all duration-200 ease-out" style={{ transitionDelay: "120ms" }}>
               {mode === "idle" ? (
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full border border-ink-border-strong" />
-                  <span className="font-mono text-[13px] text-ink-muted blueprint-idle-text">
+                  <span className="font-mono text-sm text-ink-muted blueprint-idle-text">
                     Protocol idle
                   </span>
                 </div>
               ) : mode === "preview" ? (
                 <div className={`flex items-center gap-2 ${contentOpacity} transition-opacity duration-200`}>
                   <span className="w-1.5 h-1.5 rounded-full border border-ink-border-strong" />
-                  <span className="font-mono text-[13px] text-ink-subtle">
+                  <span className="font-mono text-sm text-ink-subtle">
                     Ready when selected
                   </span>
                 </div>
@@ -237,7 +237,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                 (proofStatus === "proving" || proofStatus === "done" || proofStatus === "error") ? (
                   <div className="flex items-center gap-2">
                     <div className={`w-1.5 h-1.5 rounded-full ${statusDot(proofStatus === "proving" ? "assigned" : networkStatus)}`} />
-                    <span className={`font-mono text-[13px] ${
+                    <span className={`font-mono text-sm ${
                       proofStatus === "done" && networkStatus === "fulfilled"
                         ? "text-green-400"
                         : proofStatus === "error" || networkStatus === "failed"
@@ -254,7 +254,7 @@ export default function ProofBlueprint({ state, networkStatus, hoveredUseCase }:
                 ) : (
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full border border-ink-border-strong" />
-                    <span className="font-mono text-[13px] text-ink-subtle">
+                    <span className="font-mono text-sm text-ink-subtle">
                       Awaiting inputs
                     </span>
                   </div>

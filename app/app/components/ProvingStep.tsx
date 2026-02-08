@@ -107,11 +107,11 @@ export default function ProvingStep({ status }: ProvingStepProps) {
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono text-[12px] text-ink-muted shrink-0">
+                    <span className="font-mono text-sm text-ink-muted shrink-0">
                       [{String(i + 1).padStart(2, "0")}]
                     </span>
                     <span
-                      className={`font-mono text-[14px] truncate ${
+                      className={`font-mono text-[15px] truncate ${
                         stage.state === "done"
                           ? "text-ink-subtle"
                           : stage.state === "active"
@@ -123,7 +123,7 @@ export default function ProvingStep({ status }: ProvingStepProps) {
                     </span>
                   </div>
 
-                  <span className="shrink-0 font-mono text-[13px]">
+                  <span className="shrink-0 font-mono text-sm">
                     {stage.state === "done" && (
                       <span className="text-green-400">done</span>
                     )}
@@ -143,7 +143,7 @@ export default function ProvingStep({ status }: ProvingStepProps) {
 
           {/* Separator + status footer */}
           <div className="mt-6 pt-4 border-t border-ink-border-strong">
-            <p className="font-mono text-[12px] text-ink-muted truncate">
+            <p className="font-mono text-sm text-ink-muted truncate">
               {status}
             </p>
           </div>

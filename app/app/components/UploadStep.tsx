@@ -158,13 +158,13 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border border-ink-border-strong rounded-full border-t-ink-subtle animate-spin" />
-              <p className="font-mono text-[15px] text-ink-subtle">Uploading...</p>
+              <p className="font-mono text-base text-ink-subtle">Uploading...</p>
             </div>
           ) : (
             <>
               <PdfIcon className="w-8 h-8 text-ink-muted mx-auto mb-4" />
-              <p className="font-mono text-[15px] text-ink-text mb-2">Drop a signed PDF here</p>
-              <p className="font-mono text-[13px] text-ink-muted">or click to browse</p>
+              <p className="font-mono text-base text-ink-text mb-2">Drop a signed PDF here</p>
+              <p className="font-mono text-sm text-ink-muted">or click to browse</p>
             </>
           )}
         </div>
@@ -181,18 +181,18 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
 
               {/* File info */}
               <div className="flex-1 min-w-0">
-                <p className="font-mono text-[15px] text-ink-bright truncate leading-tight">{pdfFile.name}</p>
+                <p className="font-mono text-base text-ink-bright truncate leading-tight">{pdfFile.name}</p>
                 <div className="flex items-center gap-3 mt-1.5">
-                  <span className="font-mono text-[13px] text-ink-muted">{formatBytes(pdfFile.size)}</span>
+                  <span className="font-mono text-sm text-ink-muted">{formatBytes(pdfFile.size)}</span>
                   <span className="text-ink-muted">|</span>
-                  <span className="font-mono text-[13px] text-ink-muted">PDF</span>
+                  <span className="font-mono text-sm text-ink-muted">PDF</span>
                 </div>
               </div>
 
               {/* Replace button */}
               <button
                 onClick={handleReplace}
-                className="font-mono text-[12px] text-ink-muted hover:text-ink-subtle uppercase tracking-wider transition-colors px-2 py-1 border border-transparent hover:border-ink-border-strong rounded-[3px]"
+                className="font-mono text-sm text-ink-muted hover:text-ink-subtle uppercase tracking-wider transition-colors px-2 py-1 border border-transparent hover:border-ink-border-strong rounded-[3px]"
               >
                 Replace
               </button>
@@ -210,54 +210,54 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
           <div className="border border-ink-border bg-ink-surface/40 p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <ShieldIcon className="w-3 h-3 text-ink-border-strong" />
-              <span className="font-mono text-[12px] text-ink-muted uppercase tracking-[0.15em]">Pre-flight checks</span>
+              <span className="font-mono text-sm text-ink-muted uppercase tracking-[0.15em]">Pre-flight checks</span>
             </div>
 
             {/* Signature detection */}
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[13px] text-ink-muted">Digital signature</span>
+              <span className="font-mono text-sm text-ink-muted">Digital signature</span>
               {preflight === "checking" ? (
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                  <span className="font-mono text-[13px] text-yellow-400">Checking...</span>
+                  <span className="font-mono text-sm text-yellow-400">Checking...</span>
                 </span>
               ) : preflight === "done" && pdfInfo ? (
                 pdfInfo.hasSig ? (
                   <span className="flex items-center gap-1.5">
                     <CheckIcon className="w-3 h-3 text-green-400" />
-                    <span className="font-mono text-[13px] text-green-400">Detected</span>
+                    <span className="font-mono text-sm text-green-400">Detected</span>
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                    <span className="font-mono text-[13px] text-red-400">Not found</span>
+                    <span className="font-mono text-sm text-red-400">Not found</span>
                   </span>
                 )
               ) : preflight === "error" ? (
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                  <span className="font-mono text-[13px] text-red-400">Read error</span>
+                  <span className="font-mono text-sm text-red-400">Read error</span>
                 </span>
               ) : null}
             </div>
 
             {/* Document integrity */}
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[13px] text-ink-muted">Document integrity</span>
+              <span className="font-mono text-sm text-ink-muted">Document integrity</span>
               {preflight === "checking" ? (
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                  <span className="font-mono text-[13px] text-yellow-400">Verifying...</span>
+                  <span className="font-mono text-sm text-yellow-400">Verifying...</span>
                 </span>
               ) : preflight === "done" ? (
                 <span className="flex items-center gap-1.5">
                   <CheckIcon className="w-3 h-3 text-green-400" />
-                  <span className="font-mono text-[13px] text-green-400">Intact</span>
+                  <span className="font-mono text-sm text-green-400">Intact</span>
                 </span>
               ) : preflight === "error" ? (
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                  <span className="font-mono text-[13px] text-red-400">Failed</span>
+                  <span className="font-mono text-sm text-red-400">Failed</span>
                 </span>
               ) : null}
             </div>
@@ -266,19 +266,19 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
             {preflight === "done" && pdfInfo && (
               <div className="pt-2 border-t border-ink-border space-y-2 animate-fadeInUp">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[13px] text-ink-muted">Pages</span>
-                  <span className="font-mono text-[13px] text-ink-subtle">{pdfInfo.pageCount}</span>
+                  <span className="font-mono text-sm text-ink-muted">Pages</span>
+                  <span className="font-mono text-sm text-ink-subtle">{pdfInfo.pageCount}</span>
                 </div>
                 {pdfInfo.signerName && (
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[13px] text-ink-muted">Signer</span>
-                    <span className="font-mono text-[13px] text-ink-subtle">{pdfInfo.signerName}</span>
+                    <span className="font-mono text-sm text-ink-muted">Signer</span>
+                    <span className="font-mono text-sm text-ink-subtle">{pdfInfo.signerName}</span>
                   </div>
                 )}
                 {pdfInfo.author && (
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[13px] text-ink-muted">Author</span>
-                    <span className="font-mono text-[13px] text-ink-subtle">{pdfInfo.author}</span>
+                    <span className="font-mono text-sm text-ink-muted">Author</span>
+                    <span className="font-mono text-sm text-ink-subtle">{pdfInfo.author}</span>
                   </div>
                 )}
               </div>
@@ -287,14 +287,14 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
             {/* Checks that will run */}
             {useCase.checks.length > 0 && preflight === "done" && pdfInfo?.hasSig && (
               <div className="pt-2 border-t border-ink-border animate-fadeInUp">
-                <span className="font-mono text-[12px] text-ink-muted uppercase tracking-[0.12em]">
+                <span className="font-mono text-sm text-ink-muted uppercase tracking-[0.12em]">
                   Will verify
                 </span>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {useCase.checks.map((check) => (
                     <span
                       key={check}
-                      className="font-mono text-[12px] text-ink-subtle border border-ink-border bg-ink-bg px-2 py-0.5 rounded-[2px]"
+                      className="font-mono text-sm text-ink-subtle border border-ink-border bg-ink-bg px-2 py-0.5 rounded-[2px]"
                     >
                       {check}
                     </span>
@@ -308,7 +308,7 @@ export default function UploadStep({ useCase, onUploaded, onContinue, pdfFile }:
           <button
             onClick={onContinue}
             disabled={preflight !== "done"}
-            className={`w-full py-3 font-mono text-[15px] flex items-center justify-center gap-2 group transition-all duration-200 ${
+            className={`w-full py-3 font-mono text-base flex items-center justify-center gap-2 group transition-all duration-200 ${
               preflight === "done"
                 ? "border border-green-400/30 bg-green-400/5 text-ink-text hover:text-ink-bright hover:border-green-400/50 hover:bg-green-400/10"
                 : "border border-ink-border text-ink-muted cursor-not-allowed"
