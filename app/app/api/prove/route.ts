@@ -11,19 +11,18 @@ export async function POST(req: Request) {
   try {
     const { proofFile, pdfFile } = await req.json();
 
-    if (!proofFile || !pdfFile) {
+    if (!proofFile) {
       return NextResponse.json(
-        { error: "proofFile and pdfFile are required" },
+        { error: "proofFile is required" },
         { status: 400 }
       );
     }
 
     // Sanitize filenames to prevent path traversal
     const safeProofFile = basename(proofFile);
-    const safePdfFile = basename(pdfFile);
 
     const proofPath = join(ROOT, "proofs", safeProofFile);
-    const pdfPath = join(ROOT, "uploads", safePdfFile);
+    const pdfPath = pdfFile ? join(ROOT, "uploads", basename(pdfFile)) : null;
     const gnarkDir = join(ROOT, "gnark-out");
     const self2gnarkBin = join(ROOT, "self2gnark", "self2gnark");
     const proveBin = join(ROOT, "sp1", "target", "release", "prove");
@@ -53,7 +52,7 @@ export async function POST(req: Request) {
       "--prove",
       "--network",
       "--gnark-dir", gnarkDir,
-      "--pdf", pdfPath,
+      ...(pdfPath ? ["--pdf", pdfPath] : []),
     ];
 
     const { stdout: proveOut, stderr: proveErr } = await execFileAsync(
