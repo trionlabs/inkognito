@@ -17,7 +17,7 @@ export default function Header({ onLogoClick }: HeaderProps) {
         </span>
       </button>
 
-      <p className="mt-4 font-sans text-[15px] text-ink-subtle italic tracking-normal">
+      <p className="mt-4 font-sans text-base text-ink-subtle italic tracking-normal">
         Compose proofs from your identity and private documents
       </p>
 

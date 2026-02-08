@@ -32,7 +32,7 @@ export default function UseCaseList({ onSelect, onHover, onHoverEnd }: UseCaseLi
           >
             <div>
                 <div className="flex items-baseline gap-3 mb-1">
-                  <span className="font-display text-[24px] font-medium text-ink-text group-hover:text-ink-bright transition-colors duration-200">
+                  <span className="font-display text-[28px] font-medium text-ink-text group-hover:text-ink-bright transition-colors duration-200">
                     {uc.label}
                   </span>
                   {uc.sources.length > 0 && (
@@ -44,7 +44,7 @@ export default function UseCaseList({ onSelect, onHover, onHoverEnd }: UseCaseLi
                             <circle cx="12" cy="11" r="3" />
                             <path d="M6 21v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1" />
                           </svg>
-                          <span className="font-mono text-[12px] uppercase tracking-wider">passport</span>
+                          <span className="font-mono text-[13px] uppercase tracking-wider">passport</span>
                         </span>
                       )}
                       {uc.sources.includes("pdf") && (
@@ -55,13 +55,13 @@ export default function UseCaseList({ onSelect, onHover, onHoverEnd }: UseCaseLi
                             <line x1="9" y1="13" x2="15" y2="13" />
                             <line x1="9" y1="17" x2="15" y2="17" />
                           </svg>
-                          <span className="font-mono text-[12px] uppercase tracking-wider">pdf</span>
+                          <span className="font-mono text-[13px] uppercase tracking-wider">pdf</span>
                         </span>
                       )}
                     </span>
                   )}
                 </div>
-                <p className="text-[15px] text-ink-muted leading-relaxed font-sans">
+                <p className="text-base text-ink-muted leading-relaxed font-sans">
                   {uc.description}
                 </p>
             </div>

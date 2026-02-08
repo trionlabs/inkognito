@@ -53,7 +53,7 @@ export default function ConfigureStep({ onContinue, onBack }: ConfigureStepProps
       <div className="space-y-6">
         {categories.map((cat) => (
           <div key={cat}>
-            <h3 className="font-mono text-[13px] uppercase tracking-[0.15em] text-ink-muted mb-3">
+            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-muted mb-3">
               {cat}
             </h3>
             <div className="space-y-1">
@@ -77,7 +77,7 @@ export default function ConfigureStep({ onContinue, onBack }: ConfigureStepProps
                       </svg>
                     )}
                   </span>
-                  <span className="font-mono text-[15px] text-ink-text group-hover:text-ink-bright transition-colors duration-150">
+                  <span className="font-mono text-base text-ink-text group-hover:text-ink-bright transition-colors duration-150">
                     {check.label}
                   </span>
                 </button>
@@ -91,7 +91,7 @@ export default function ConfigureStep({ onContinue, onBack }: ConfigureStepProps
       <div className="border-t border-ink-border-strong mt-8 pt-5 flex items-center justify-between">
         <div className="flex items-center gap-2 text-ink-muted">
           {inferredSources.includes("passport") && (
-            <div className="flex items-center gap-1.5 font-mono text-[13px] uppercase tracking-wide">
+            <div className="flex items-center gap-1.5 font-mono text-sm uppercase tracking-wide">
               <PassportIcon className="w-3.5 h-3.5" />
               <span>passport</span>
             </div>
@@ -100,7 +100,7 @@ export default function ConfigureStep({ onContinue, onBack }: ConfigureStepProps
             <span className="text-ink-muted mx-1">+</span>
           )}
           {inferredSources.includes("pdf") && (
-            <div className="flex items-center gap-1.5 font-mono text-[13px] uppercase tracking-wide">
+            <div className="flex items-center gap-1.5 font-mono text-sm uppercase tracking-wide">
               <PdfIcon className="w-3.5 h-3.5" />
               <span>pdf</span>
             </div>
@@ -110,14 +110,14 @@ export default function ConfigureStep({ onContinue, onBack }: ConfigureStepProps
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="font-mono text-[15px] text-ink-muted hover:text-ink-bright transition-colors duration-200"
+            className="font-mono text-base text-ink-muted hover:text-ink-bright transition-colors duration-200"
           >
             back
           </button>
           <button
             onClick={() => onContinue(selectedChecks)}
             disabled={selected.size === 0}
-            className={`font-mono text-[15px] px-5 py-2 border transition-all duration-200 ${
+            className={`font-mono text-base px-5 py-2 border transition-all duration-200 ${
               selected.size === 0
                 ? "border-ink-border-strong text-ink-muted cursor-not-allowed opacity-40"
                 : "border-ink-bright text-ink-bright hover:bg-ink-bright hover:text-ink-bg"
