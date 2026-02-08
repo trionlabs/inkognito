@@ -199,10 +199,10 @@ Proof generation can happen locally or via private prover networks (e.g. Succinc
 The resulting proof can be used in peer-to-peer applications, or on-chain verification via wrapped PLONK or Groth16 proofs.
 
 ### Performance
-Operation: Cycles (SP1 v5.2.4) 
-Groth16 BN254 Verification: ~8,000,000 
-PDF signature + text extraction + cross-check: ~21,800,000 
-Total (identity + PDF): ~29,800,000
+- Operation: Cycles (SP1 v5.2.4) 
+- Groth16 BN254 Verification: ~8,000,000 
+- PDF signature + text extraction + cross-check: ~21,800,000 
+- Total (identity + PDF): ~29,800,000
 
 ### Security Model
 What is proven (inside zkVM)
@@ -211,3 +211,4 @@ The PDF's digital signature is cryptographically valid (PKCS#7/CMS)
 The identity fields extracted from the proof's public signals appear in the PDF
 
 ![Proof Composability](composability.jpg)
+https://www.mackenziemorehead.com/putting-the-cryptography-back-in-crypto/
