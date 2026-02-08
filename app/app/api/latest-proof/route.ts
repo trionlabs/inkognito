@@ -21,7 +21,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ filename: latest.name });
+    return NextResponse.json({ filename: latest.name, mtime: latest.mtime });
   } catch (error) {
     console.error("[ERROR]: Failed to list proofs:", error);
     return NextResponse.json(
