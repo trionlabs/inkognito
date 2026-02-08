@@ -1,6 +1,6 @@
 # Inkognito
 
-Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM. Verifies a Groth16 identity proof, a PDF digital signature, and cross-checks the personal information, details between the two, all in a single zero-knowledge proof.
+Compose zkPDF document proofs with Self Protocol identity proofs (Passport, EU ID, Aadhaar) inside SP1 zkVM. Verifies a Groth16 identity proof, a PDF digital signature, and cross-checks personal information between the two — all in a single zero-knowledge proof.
 
 ```mermaid
 graph LR
@@ -26,8 +26,6 @@ Consider a financial statement issued by a bank, a signed employment contract, o
 (b) trusting an intermediary that has seen both.
 Neither option preserves privacy. The document holder must choose between provability and confidentiality.
 
-This problem is also explained very well in the blog post you shared under the Programmable Cryptography track, titled "Putting Cryptography Back Into Crypto"
-
 ## Solution
 Inkognito lets you prove that a specific entity signed a specific document without revealing any identity information or the document’s contents.
 It composes Self Protocol’s (self.xyz) zero-knowledge identity proofs , (supporting biometric e-passports, European national IDs, Aadhaar, and more) with zkPDF’s digital signature verification, all executed inside SP1’s zkVM.
@@ -39,7 +37,7 @@ Inkognito is permissionless in a way that you don’t need to ask your bank, emp
 It is also composable: digitally signed documents and identity proofs can be  combined in any way, reused, and recomposed for different verification contexts and purposes without re-exposing identity data or document contents.
 
 Besides making identity checks more unfakeable, this solution also enables unique and more interesting use cases in the field of programmable cryptography and decentralized finance.
-(Real World) Examples & Business Potentials
+### (Real World) Examples & Business Potentials
 
 ### Example 1 - Real Bank Statements
 Enpara.com is a bank in Turkey that digitally signs all customer documents such as financial statements, gold purchase confirmations, and similar records which include the user’s name, surname, and ID number.
@@ -75,18 +73,17 @@ Reference:
 
 There are many other real-world systems like these already in production that could be directly integrated :)
 
-
 ## Technical Details
 
 **What SP1 verifies:**
 1. Groth16 BN254 proof from Self Protocol (identity)
 2. PDF digital signature (document authenticity)
-3. Name, surname, ID number etc. cross-check between identity proof and PDF signer
+3. Surname, given name, and date of birth cross-check between identity proof and PDF signer
 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+ and pnpm
+- [Node.js](https://nodejs.org/) 18+ and npm
 - [Go](https://go.dev/) 1.21+
 - [SP1](https://docs.succinct.xyz/) v5.2.4: `sp1up --version v5.2.4`
 - [ngrok](https://ngrok.com/) (Self Protocol requires a public endpoint)
@@ -96,7 +93,7 @@ There are many other real-world systems like these already in production that co
 
 ```bash
 cd app
-pnpm install
+npm install
 
 # Start ngrok tunnel (separate terminal)
 ngrok http 3000
@@ -104,7 +101,7 @@ ngrok http 3000
 # Set your ngrok URL in .env
 cp .env.example .env
 
-pnpm dev
+npm run dev
 ```
 
 1. Open `http://localhost:3000`
@@ -135,7 +132,7 @@ cd sp1
 # Self Groth16 verification only
 cargo run --release --bin prove -- --execute --gnark-dir ../gnark-out
 
-# Groth16 + PDF signature + name, surname and ID number cross-check
+# Groth16 + PDF signature + surname, given name, DOB cross-check
 cargo run --release --bin prove -- --execute --gnark-dir ../gnark-out --pdf <path-to-signed.pdf>
 ```
 
@@ -144,9 +141,11 @@ cargo run --release --bin prove -- --execute --gnark-dir ../gnark-out --pdf <pat
 | Flag | Description |
 |------|-------------|
 | `--gnark-dir` | Directory with gnark exports (proof.bin, vk.bin, public_inputs.bin, identity.json) |
-| `--pdf` | Optional signed PDF for signature verification + surname cross-check |
+| `--pdf` | Optional signed PDF for signature verification + identity cross-check |
 | `--execute` | Run in SP1 executor (fast, no proof generated) |
 | `--prove` | Generate a full SP1 proof (slow on CPU) |
+| `--network` | Submit to Succinct prover network (use with `--prove`) |
+| `--private` | Enable TEE private proving (use with `--prove --network`) |
 
 ### Attestation Types
 
@@ -165,7 +164,13 @@ SP1 v5.2.4's `sp1-verifier` panics on zero-valued public inputs (`AffineG1 * Fr(
 if *i != Fr::zero() { acc + (*b * *i) } else { acc }
 ```
 
-### Architecture
+### More Technical Details & Architecture
+The core idea is straightforward: take a zero-knowledge identity proof and a digitally signed PDF, feed both into a zkVM, and have the program verify that the identity in the proof matches the identity in the document. The challenge is making all the pieces actually work together.
+Self Protocol generates Groth16 proofs over BN254 using Circom / snarkJS circuits. SP1's zkVM has a native BN254 pairing precompile, which makes Groth16 verification inside the zkVM practical (~8M cycles). But SP1's verifier expects proofs in gnark's binary format, and Self outputs them in snarkJS format. These are the same mathematical objects,  same curve points, same field elements but serialized completely differently. G2 points alone require byte reordering because gnark and snarkJS disagree on how to lay out Fq2 tower extension components. So we built a Go converter (self2gnark) that handles the full Self -> snarkJS ->gnark pipeline, including a Groth16 pairing check as a sanity gate before anything enters the zkVM.
+For PDF verification, we use zkPDF's signature-validator and text extractor crates. These run entirely inside SP1's RISC-V guest, meaning the PDF's PKCS#7/CMS signature is verified and its text is extracted within the zero-knowledge execution. No trusted third party sees the document. The cross-check itself is a case-insensitive search: we unpack the identity field (surname, given name, date of birth etc.) from the Groth16 proof's public signals, then search for them in the PDF's extracted text and raw bytes. If the PDF signature is valid and the identity fields appear in the document, the binding holds.
+For proof generation, we support both local proving and Succinct's prover network. The `--private` flag routes the proof through TEE infrastructure, so even the prover never sees the witness data, the identity fields and document contents remain private end to end.
+
+
 It is a four-stage pipeline:
 
 *Step 1: Identity Proof Capture*
@@ -186,13 +191,12 @@ Inside the SP1 program, what Inkognito does  is:
 - Verify the Self zkID Groth16 proof using the BN254 precompile
 - Unpack Groth16 public inputs to recover identity fields from public signals
 - Verify PDF digital signatures (PKCS#7 / CMS + X.509)
-- Extract structured fields from the PDF using regular expressions for selective disclosure
-- Cross-check identity fields from the Groth16 proof against PDF content
-    - ID number
+- Extract text from the PDF for cross-checking
+- Cross-check identity fields from the Groth16 proof against PDF content (case-insensitive string search in both extracted text and raw PDF bytes)
     - Surname
     - Given name
     - Date of birth
-This way it's for sure that the zkID data is matching with the zkPDF data. 
+This way it's for sure that the zkID data is matching with the zkPDF data.
 
 *Step 4: Proof Generation*
 Proof generation can happen locally or via private prover networks (e.g. Succinct’s private prover network using TEEs).
