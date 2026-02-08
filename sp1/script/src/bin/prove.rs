@@ -111,17 +111,25 @@ fn main() {
 
         let pdf_sig_valid: bool = output.read();
         let surname_match: bool = output.read();
+        let name_match: bool = output.read();
+        let dob_match: bool = output.read();
         let num_inputs: u32 = output.read();
 
         if has_pdf {
             println!("PDF signature valid: {}", pdf_sig_valid);
             println!("Surname match: {}", surname_match);
+            println!("Given name match: {}", name_match);
+            println!("DOB match: {}", dob_match);
         }
         println!("Public inputs count: {}", num_inputs);
 
-        if groth16_verified && (!has_pdf || (pdf_sig_valid && surname_match)) {
+        let identity_ok = pdf_sig_valid && surname_match && name_match;
+        if groth16_verified && (!has_pdf || identity_ok) {
             if has_pdf {
-                println!("\nSUCCESS: Identity proof + PDF signature verified, surname cross-check passed!");
+                println!("\nSUCCESS: Identity proof + PDF signature verified, name cross-check passed!");
+                if !dob_match {
+                    println!("  (DOB cross-check failed — DOB in proof differs from PDF)");
+                }
             } else {
                 println!("\nSUCCESS: Groth16 proof verified inside SP1 zkVM!");
             }
@@ -135,6 +143,12 @@ fn main() {
             }
             if has_pdf && !surname_match {
                 eprintln!("  - Surname cross-check failed");
+            }
+            if has_pdf && !name_match {
+                eprintln!("  - Given name cross-check failed");
+            }
+            if has_pdf && !dob_match {
+                eprintln!("  - DOB cross-check failed");
             }
             std::process::exit(1);
         }
@@ -163,7 +177,7 @@ fn main() {
             .expect("failed to submit proof request");
 
         let request_id_hex = format!("0x{}", hex::encode(request_id.as_slice()));
-        let explorer_url = format!("https://explorer.succinct.xyz/request/{}", request_id_hex);
+        let explorer_url = format!("https://explorer.reserved.succinct.xyz/request/{}", request_id_hex);
 
         // Print JSON to stdout for machine parsing
         println!("---JSON_OUTPUT_START---");

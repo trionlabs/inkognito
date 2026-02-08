@@ -16,8 +16,8 @@ interface ProveResult {
     surname?: string;
     given_name?: string;
     nationality?: string;
-    date_of_birth?: string;
-    older_than?: number;
+    dob?: string;
+    older_than?: string;
     attestation_id?: number;
   };
 }
@@ -38,6 +38,9 @@ export default function Home() {
   const [proveResult, setProveResult] = useState<ProveResult | null>(null);
   const [proveError, setProveError] = useState<string | null>(null);
 
+  // Network status polling
+  const [networkStatus, setNetworkStatus] = useState<string>("pending");
+
   useEffect(() => {
     try {
       const app = new SelfAppBuilder({
@@ -50,6 +53,7 @@ export default function Home() {
         userId: "0x0000000000000000000000000000000000000000",
         userIdType: "hex",
         endpointType: "staging_https",
+        devMode: true,
         version: 2,
         disclosures: {
           nationality: true,
@@ -64,6 +68,28 @@ export default function Home() {
       console.error("[ERROR]: Failed to initialize Self app:", error);
     }
   }, []);
+
+  // Poll network status when we have a result
+  useEffect(() => {
+    if (!proveResult?.requestId) return;
+    setNetworkStatus("pending");
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/proof-status?requestId=${encodeURIComponent(proveResult.requestId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status) setNetworkStatus(data.status);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 15_000);
+    return () => clearInterval(interval);
+  }, [proveResult?.requestId]);
 
   const uploadPdf = useCallback(async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
@@ -120,14 +146,12 @@ export default function Home() {
     setProvingStatus("Finding latest proof...");
 
     try {
-      // Get latest proof file
       const latestRes = await fetch("/api/latest-proof");
       const latestData = await latestRes.json();
       if (!latestRes.ok) throw new Error(latestData.error || "No proof found");
 
       setProvingStatus("Converting proof & submitting to Succinct network...");
 
-      // Submit to prove pipeline
       const proveRes = await fetch("/api/prove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,6 +176,24 @@ export default function Home() {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const truncateId = (id: string) => {
+    if (id.length <= 16) return id;
+    return `${id.slice(0, 10)}...${id.slice(-6)}`;
+  };
+
+  const statusColor = (s: string) => {
+    if (s === "fulfilled") return "text-green-400";
+    if (s === "failed") return "text-red-400";
+    return "text-yellow-400";
+  };
+
+  const statusLabel = (s: string) => {
+    if (s === "fulfilled") return "Fulfilled";
+    if (s === "failed") return "Failed";
+    if (s === "assigned") return "Proving...";
+    return "Pending";
   };
 
   return (
@@ -241,7 +283,8 @@ export default function Home() {
                     handleGenerateProof();
                   }}
                   onError={(data) => {
-                    setProofError("Verification failed. Try again.");
+                    const reason = data?.reason || data?.error_code || "Unknown error";
+                    setProofError(`Verification failed: ${reason}`);
                     console.error("[ERROR]: Verification error:", data);
                   }}
                   size={300}
@@ -288,6 +331,7 @@ export default function Home() {
         {/* Step 4: Done */}
         {step === "done" && (
           <div className="space-y-4">
+            {/* Input summary */}
             <div className="space-y-2">
               <div className="flex items-center gap-3 p-3 bg-green-900/30 border border-green-800 rounded-lg text-sm">
                 <span className="text-green-400">PDF</span>
@@ -300,45 +344,82 @@ export default function Home() {
             </div>
 
             {proveResult && (
-              <div className="p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
-                <p className="text-green-400 font-medium">Proof submitted to Succinct network</p>
-
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-gray-500">Explorer: </span>
-                    <a
-                      href={proveResult.explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 underline break-all"
-                    >
-                      {proveResult.explorerUrl}
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Request ID: </span>
-                    <code className="text-gray-300 text-xs break-all">{proveResult.requestId}</code>
-                  </div>
-                </div>
-
+              <>
+                {/* Decoded Identity — shown first since it comes from the QR scan step */}
                 {proveResult.identity && (
-                  <div className="mt-3 pt-3 border-t border-green-800 space-y-1 text-sm">
-                    <p className="text-gray-400 font-medium mb-2">Decoded Identity</p>
-                    {proveResult.identity.surname && (
-                      <div><span className="text-gray-500">Name: </span><span className="text-gray-300">{proveResult.identity.given_name} {proveResult.identity.surname}</span></div>
-                    )}
-                    {proveResult.identity.nationality && (
-                      <div><span className="text-gray-500">Nationality: </span><span className="text-gray-300">{proveResult.identity.nationality}</span></div>
-                    )}
-                    {proveResult.identity.date_of_birth && (
-                      <div><span className="text-gray-500">DOB: </span><span className="text-gray-300">{proveResult.identity.date_of_birth}</span></div>
-                    )}
-                    {proveResult.identity.older_than !== undefined && (
-                      <div><span className="text-gray-500">Older than: </span><span className="text-gray-300">{proveResult.identity.older_than}</span></div>
-                    )}
+                  <div className="p-4 bg-gray-900 border border-gray-700 rounded-lg space-y-3">
+                    <p className="text-white font-medium">Verified Identity</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {proveResult.identity.surname && (
+                        <div>
+                          <p className="text-gray-500 text-xs">Name</p>
+                          <p className="text-gray-200">{proveResult.identity.given_name} {proveResult.identity.surname}</p>
+                        </div>
+                      )}
+                      {proveResult.identity.nationality && (
+                        <div>
+                          <p className="text-gray-500 text-xs">Nationality</p>
+                          <p className="text-gray-200">{proveResult.identity.nationality}</p>
+                        </div>
+                      )}
+                      {proveResult.identity.dob && (
+                        <div>
+                          <p className="text-gray-500 text-xs">Date of Birth</p>
+                          <p className="text-gray-200">{proveResult.identity.dob}</p>
+                        </div>
+                      )}
+                      {proveResult.identity.older_than && (
+                        <div>
+                          <p className="text-gray-500 text-xs">Age Verified</p>
+                          <p className="text-gray-200">{proveResult.identity.older_than}+</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-2 border-t border-gray-800">
+                      <p className="text-gray-600 text-xs">
+                        ZK proof verifies: Groth16 identity proof + PDF digital signature + name cross-check + DOB cross-check
+                      </p>
+                    </div>
                   </div>
                 )}
-              </div>
+
+                {/* SP1 Prover Network Status — below identity since it proves both PDF + ID */}
+                <div className="p-4 bg-gray-900 border border-gray-700 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-white font-medium">Succinct Prover Network</p>
+                    <div className="flex items-center gap-2">
+                      {networkStatus !== "fulfilled" && networkStatus !== "failed" && (
+                        <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                      )}
+                      {networkStatus === "fulfilled" && (
+                        <div className="w-2 h-2 rounded-full bg-green-400" />
+                      )}
+                      {networkStatus === "failed" && (
+                        <div className="w-2 h-2 rounded-full bg-red-400" />
+                      )}
+                      <span className={`text-sm font-medium ${statusColor(networkStatus)}`}>
+                        {statusLabel(networkStatus)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Request ID</span>
+                      <code className="text-gray-400 text-xs">{truncateId(proveResult.requestId)}</code>
+                    </div>
+                  </div>
+
+                  <a
+                    href={proveResult.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full py-2 text-center text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors"
+                  >
+                    View on Succinct Explorer
+                  </a>
+                </div>
+              </>
             )}
 
             {proveError && (
@@ -357,6 +438,7 @@ export default function Home() {
                 setProveResult(null);
                 setProveError(null);
                 setProvingStatus("");
+                setNetworkStatus("pending");
               }}
               className="w-full py-2 text-sm text-gray-400 hover:text-white border border-gray-800 hover:border-gray-600 rounded-lg transition-colors"
             >

@@ -77,21 +77,57 @@ var attestationNames = map[int]string{
 	3: "AADHAAR",
 }
 
-// `decodeIdCardSignals` unpacks `revealedData_packed[0..3]` from public signals to extract identity fields from EU_ID_CARD/E-PASSPORT MRZ data.
+// `decodeSignals` unpacks revealedData_packed from public signals to extract identity fields.
+// Supports E-PASSPORT (1), EU_ID_CARD (2), and AADHAAR (3) with correct byte offsets per type.
 // Each public signal is a field element; bytes are packed little-endian:
 // `byte[j] = (element >> (j*8)) & 0xFF`
 // Element sizes: [31, 31, 31, 1] -> 94 bytes total
-func decodeIdCardSignals(signals []string) map[string]string {
-	bytesPerElement := []int{31, 31, 31, 1}
-	var allBytes []byte
+func decodeSignals(signals []string, attID int) map[string]string {
+	// Per-attestation-type config from Self Protocol's discloseIndices + revealedDataIndices
+	type fieldOffsets struct {
+		packedCount    int   // number of packed signals
+		bytesPerElem   []int // bytes per packed element
+		issuingState   [2]int
+		name           [2]int
+		nationality    [2]int
+		dob            [2]int
+		olderThan      [2]int
+	}
 
-	for i := 0; i < 4 && i < len(signals); i++ {
+	layouts := map[int]fieldOffsets{
+		1: { // E-PASSPORT: 3 packed signals (93 bytes)
+			packedCount:  3,
+			bytesPerElem: []int{31, 31, 31},
+			issuingState: [2]int{2, 5},
+			name:         [2]int{5, 44},
+			nationality:  [2]int{54, 57},
+			dob:          [2]int{57, 63},
+			olderThan:    [2]int{88, 90},
+		},
+		2: { // EU_ID_CARD: 4 packed signals (94 bytes)
+			packedCount:  4,
+			bytesPerElem: []int{31, 31, 31, 1},
+			issuingState: [2]int{2, 5},
+			name:         [2]int{60, 90},
+			nationality:  [2]int{45, 48},
+			dob:          [2]int{30, 36},
+			olderThan:    [2]int{90, 92},
+		},
+	}
+
+	layout, ok := layouts[attID]
+	if !ok {
+		fmt.Printf("Warning: no decode layout for attestation ID %d, falling back to E-PASSPORT\n", attID)
+		layout = layouts[1]
+	}
+
+	var allBytes []byte
+	for i := 0; i < layout.packedCount && i < len(signals); i++ {
 		n := new(big.Int)
 		n.SetString(signals[i], 10)
 
-		count := bytesPerElement[i]
+		count := layout.bytesPerElem[i]
 		for j := 0; j < count; j++ {
-			// little-endian: byte j = (n >> (j*8)) & 0xFF
 			shifted := new(big.Int).Rsh(n, uint(j*8))
 			b := byte(shifted.Int64() & 0xFF)
 			allBytes = append(allBytes, b)
@@ -102,22 +138,25 @@ func decodeIdCardSignals(signals []string) map[string]string {
 
 	result := make(map[string]string)
 
-	// Extract fields from MRZ byte positions
-	if len(allBytes) >= 92 {
-		result["issuing_state"] = strings.TrimRight(string(allBytes[2:5]), "\x00 ")
-		result["dob"] = strings.TrimRight(string(allBytes[30:36]), "\x00 ")
-		result["nationality"] = strings.TrimRight(string(allBytes[45:48]), "\x00 ")
-
-		// Name field: bytes 60..89
-		nameRaw := strings.TrimRight(string(allBytes[60:90]), "\x00 <")
-		parts := strings.SplitN(nameRaw, "<<", 2)
-		result["surname"] = strings.TrimRight(parts[0], "<")
-		if len(parts) > 1 {
-			result["given_name"] = strings.ReplaceAll(strings.TrimRight(parts[1], "<"), "<", " ")
+	safeSlice := func(start, end int) string {
+		if start >= len(allBytes) || end > len(allBytes) || start >= end {
+			return ""
 		}
-
-		result["older_than"] = strings.TrimRight(string(allBytes[90:92]), "\x00 ")
+		return strings.TrimRight(string(allBytes[start:end]), "\x00 ")
 	}
+
+	result["issuing_state"] = safeSlice(layout.issuingState[0], layout.issuingState[1])
+	result["dob"] = safeSlice(layout.dob[0], layout.dob[1])
+	result["nationality"] = safeSlice(layout.nationality[0], layout.nationality[1])
+
+	nameRaw := strings.TrimRight(safeSlice(layout.name[0], layout.name[1]), "<")
+	parts := strings.SplitN(nameRaw, "<<", 2)
+	result["surname"] = strings.TrimRight(parts[0], "<")
+	if len(parts) > 1 {
+		result["given_name"] = strings.ReplaceAll(strings.TrimRight(parts[1], "<"), "<", " ")
+	}
+
+	result["older_than"] = safeSlice(layout.olderThan[0], layout.olderThan[1])
 
 	return result
 }
@@ -288,7 +327,7 @@ func main() {
 			log.Fatalf("Failed to parse public signals for decoding: %v", err)
 		}
 		fmt.Println("\n--- Decoding identity fields ---")
-		identity := decodeIdCardSignals(signals)
+		identity := decodeSignals(signals, attID)
 		for k, v := range identity {
 			fmt.Printf("  %s: %s\n", k, v)
 		}
@@ -347,7 +386,7 @@ func main() {
 		if *decode {
 			var signals []string
 			if err := json.Unmarshal(pubSignalsJSON, &signals); err == nil {
-				decoded := decodeIdCardSignals(signals)
+				decoded := decodeSignals(signals, attID)
 				for k, v := range decoded {
 					identity[k] = v
 				}
