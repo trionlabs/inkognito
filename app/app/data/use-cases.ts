@@ -10,6 +10,19 @@ export const useCases: UseCase[] = [
     outputDescription: "Boolean proof: subject is over 18",
   },
   {
+    id: "kyc-compliance",
+    label: "KYC Compliance",
+    description: "Meet regulatory KYC requirements without exposing raw personal data.",
+    sources: ["passport"],
+    checks: [
+      "Passport validity",
+      "Identity extraction",
+      "Nationality verification",
+      "Age threshold (18+)",
+    ],
+    outputDescription: "Compliance attestation with selective disclosure",
+  },
+  {
     id: "document-verification",
     label: "Document Verification",
     description: "Verify a PDF document's digital signature is authentic and unmodified.",
@@ -29,19 +42,6 @@ export const useCases: UseCase[] = [
       "Identity-to-signer binding",
     ],
     outputDescription: "Boolean proof: passport holder signed the document",
-  },
-  {
-    id: "kyc-compliance",
-    label: "KYC Compliance",
-    description: "Meet regulatory KYC requirements without exposing raw personal data.",
-    sources: ["passport"],
-    checks: [
-      "Passport validity",
-      "Identity extraction",
-      "Nationality verification",
-      "Age threshold (18+)",
-    ],
-    outputDescription: "Compliance attestation with selective disclosure",
   },
   {
     id: "legal-document",
