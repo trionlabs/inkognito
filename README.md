@@ -210,4 +210,4 @@ The Groth16 proof is valid under the Self Protocol verification key
 The PDF's digital signature is cryptographically valid (PKCS#7/CMS)
 The identity fields extracted from the proof's public signals appear in the PDF
 
-(composability)[composability.jpg]
+![Proof Composability](composability.jpg)
